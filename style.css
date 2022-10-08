@@ -1,0 +1,129 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+header ul{
+    display:flex;
+    padding:10px;
+    font-size:18px;
+    font-weight:200;
+    justify-content: center;
+    list-style-type: none;
+    border-bottom:0.1rem solid white;
+    position: fixed;
+    top: 0%;
+    background: black;
+    width: 100%;
+    z-index: 1;
+}
+header li{
+    margin:0px 40px;
+}
+header li a{
+    text-decoration: none;
+    color:white;
+}
+
+
+h1 {
+    padding: 40px;
+    font-size: 100px;
+    background-color: gray;
+    color: white;
+    text-align: center;
+}
+
+#music-content div {
+    margin: 20px 0px;
+
+}
+
+#music {
+    text-align: center;
+
+}
+
+div .shop-item-button {
+    background-color: aqua;
+    border: 0ch;
+    font-weight: bold;
+    color: white;
+
+
+}
+
+div .shop-item-button:hover {
+    background-color: rgb(7, 202, 202);
+
+}
+
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 30px;
+}
+
+
+#merch-content div {
+    margin: 20px 0px;
+
+}
+
+#merch {
+    text-align: center;
+
+}
+
+#cart-button{
+   justify-content: space-around;
+    display: flex;
+    margin-top:10px;
+    margin-bottom: 10px;
+    margin-left: 50%;
+    background-color: aqua;
+    font-size: large;
+
+}
+footer{
+    display:flex;
+    margin-top:40px;
+    padding:20px;
+    background: #56CCF2;
+}
+
+footer .footer-title{
+    text-align: center;
+    color:white;
+    width:50%;
+    font-size:50px;
+    font-weight:bold;
+    margin:0 auto;
+}
+
+footer .footer-icons{
+    width:50%;
+    display:flex;
+    align-items:center;
+    justify-content: space-around;
+}
+
+
+.footer-icons ul{
+    list-style-type: none;
+    display:flex;
+}
+.footer-icons li{
+    padding:10px;
+    margin:0px 20px;
+}
+.footer-icons li:hover{
+    background:rgb(17, 206, 206);
+}
+.footer-icons img{
+    width:30px;
+}
