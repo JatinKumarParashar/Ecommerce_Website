@@ -98,3 +98,35 @@ container.addEventListener('click', (e) => {
     }
 })
 
+window.addEventListener('DOMContentLoaded',()=>{
+    axios.get('http://localhost:3000/shop').then((data)=>{
+        console.log('123',data.data);
+        for(let i=0;i<data.data.length;i++)
+        {
+            showOnScreen(data.data[i]);
+        }
+    })
+})
+
+function showOnScreen(data){
+    const parent=document.getElementById('music-content');
+    const child=`<div id="album-${data.id}">
+    <h3>${data.title}</h3>
+    <div class="image-container">
+        <img src="${data.image}" alt="">
+    </div>
+    <div class="prod-details">
+        <span> $
+            <span>${data.price}</span>
+        </span>
+        <button class="shop-item-button" type="button">ADD TO CART</button>
+
+    </div>
+
+</div>`;
+console.log('456',child)
+
+parent.innerHTML+=child;
+
+}
+
