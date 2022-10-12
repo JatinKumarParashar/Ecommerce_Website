@@ -28,50 +28,25 @@ container.addEventListener('mousemove', (e) => {
 container.addEventListener('click', (e) => {
     if (e.target.classList == 'shop-item-button') {
         console.log('button has been clicked');
-        const firstParent = e.target.parentElement;
-        const ParentOfParent = firstParent.parentElement.id;
-        console.log('THis is first parent sibiling elemtnt', ParentOfParent);
-        console.log('456', document.querySelector(`#${ParentOfParent} h3`));
-        const title = document.querySelector(`#${ParentOfParent} h3`).innerText;
-        console.log('789', title);
-        const src = document.querySelector(`#${ParentOfParent} div`).firstElementChild.src;
-        console.log('9027261589', src);
-        const price = e.target.parentElement.firstElementChild.firstElementChild.innerText;
-        console.log('789', price);
-        console.log('123', cartItem);
-        let total_cart_price = document.querySelector('#total-value').innerText;
+        const parent = e.target.parentElement;
+        const ParentOfParent = parent.parentElement.id;
+        const prodId = Number(ParentOfParent.split('-')[1]);
+        console.log('65146', prodId);
         
-        if (document.querySelector(`#in-cart-${ParentOfParent}`)) {
-            alert('This item is already added to the cart');
-            return
-        }
-        document.querySelector('.cart-number').innerText = parseInt(document.querySelector('.cart-number').innerText)+1
-        total_cart_price = parseFloat(total_cart_price) + parseFloat(price)
-        total_cart_price = total_cart_price.toFixed(2)
-        document.querySelector('#total-value').innerText = `${total_cart_price}`;
-        const item = document.createElement('div');
-        item.setAttribute('id', `in-cart-${ParentOfParent}`);
-        item.innerHTML = `<span class='cart-item cart-column'>
-        <img class='cart-img' src="${src}" alt="">
-            <span>${title}</span>
-    </span>
-    <span class='cart-price cart-column'>${price}</span>
-    <span class='cart-quantity cart-column'>
-        <input type="text" value="1">
-        <button>REMOVE</button>
-    </span>`;
-        cartItem.appendChild(item);
-        const notification = document.createElement('div');
-        notification.classList.add('notification');
-        notification.innerHTML = `<h4>Your Product : <span>${title}</span> is added to the cart<h4>`;
-        console.log('Kumar', notification);
-        container.appendChild(notification);
-        setTimeout(() => {
-            notification.remove();
-        }, 2500)
+        axios.post('http://localhost:3000/cart', { productId: prodId }).then((data) => {
+            console.log(data);
+        }).catch((err) => {
+            console.log(err);
+        })
     }
-    if (e.target.className == 'cart-button'|| e.target.className=='cart-holder') {
+    if (e.target.className == 'cart-button' || e.target.className == 'cart-holder') {
         console.log('123', e.target.classList);
+        axios.get('http://localhost:3000/cart').then(products => {
+        console.log('8015',products.data);   
+        for(let i=0;i<products.data.length;i++){
+            showProductInCart(products.data[i]);
+        }
+        })
         document.querySelector('#cart').style = "display:block;"
     }
     if (e.target.className == 'cancle') {
@@ -79,8 +54,8 @@ container.addEventListener('click', (e) => {
         document.querySelector('#cart').style = "display:none;"
     }
 
-    if (e.target.className=='purchase-button'){
-        if (parseInt(document.querySelector('.cart-number').innerText) === 0){
+    if (e.target.className == 'purchase-button') {
+        if (parseInt(document.querySelector('.cart-number').innerText) === 0) {
             alert('You have Nothing in Cart , Add some products to purchase !');
             return
         }
@@ -89,28 +64,28 @@ container.addEventListener('click', (e) => {
         document.querySelector('.cart-number').innerText = 0
         document.querySelector('#total-value').innerText = `0`;
     }
-    if (e.target.innerText=='REMOVE'){
+    if (e.target.innerText == 'REMOVE') {
         let total_cart_price = document.querySelector('#total-value').innerText;
-        total_cart_price = parseFloat(total_cart_price).toFixed(2) - parseFloat(document.querySelector(`#${e.target.parentNode.parentNode.id} .cart-price`).innerText).toFixed(2) ;
-        document.querySelector('.cart-number').innerText = parseInt(document.querySelector('.cart-number').innerText)-1
+        total_cart_price = parseFloat(total_cart_price).toFixed(2) - parseFloat(document.querySelector(`#${e.target.parentNode.parentNode.id} .cart-price`).innerText).toFixed(2);
+        document.querySelector('.cart-number').innerText = parseInt(document.querySelector('.cart-number').innerText) - 1
         document.querySelector('#total-value').innerText = `${total_cart_price.toFixed(2)}`
         e.target.parentNode.parentNode.remove()
     }
 })
 
-window.addEventListener('DOMContentLoaded',()=>{
-    axios.get('http://localhost:3000/shop').then((data)=>{
-        console.log('123',data.data);
-        for(let i=0;i<data.data.length;i++)
-        {
+window.addEventListener('DOMContentLoaded', () => {
+    axios.get('http://localhost:3000/shop').then((data) => {
+        console.log('123', data.data);
+        for (let i = 0; i < data.data.length; i++) {
             showOnScreen(data.data[i]);
         }
     })
 })
 
-function showOnScreen(data){
-    const parent=document.getElementById('music-content');
-    const child=`<div id="album-${data.id}">
+function showOnScreen(data) {
+    const parent = document.getElementById('music-content');
+    
+    const child = `<div id="product-${data.id}">
     <h3>${data.title}</h3>
     <div class="image-container">
         <img src="${data.image}" alt="">
@@ -124,9 +99,41 @@ function showOnScreen(data){
     </div>
 
 </div>`;
-console.log('456',child)
+    console.log('456', child)
 
-parent.innerHTML+=child;
+    parent.innerHTML += child;
 
+}
+
+function showProductInCart(product) {
+
+    
+    let total_cart_price = document.querySelector('#total-value').innerText;
+
+    
+    document.querySelector('.cart-number').innerText = parseInt(document.querySelector('.cart-number').innerText) + 1
+    total_cart_price = parseFloat(total_cart_price) + parseFloat(product.price)
+    total_cart_price = total_cart_price.toFixed(2)
+    document.querySelector('#total-value').innerText = `${total_cart_price}`;
+    const item = document.createElement('div');
+    item.setAttribute('id', `in-cart-${product.id}`);
+    item.innerHTML = `<span class='cart-item cart-column'>
+    <img class='cart-img' src="${product.image}" alt="">
+        <span>${product.title}</span>
+</span>
+<span class='cart-price cart-column'>${product.price}</span>
+<span class='cart-quantity cart-column'>
+    <input type="text" value="1">
+    <button>REMOVE</button>
+</span>`;
+    cartItem.appendChild(item);
+    const notification = document.createElement('div');
+    notification.classList.add('notification');
+    notification.innerHTML = `<h4>Your Product : <span>${product.title}</span> is added to the cart<h4>`;
+    console.log('Kumar', notification);
+    container.appendChild(notification);
+    setTimeout(() => {
+        notification.remove();
+    }, 2500)
 }
 
