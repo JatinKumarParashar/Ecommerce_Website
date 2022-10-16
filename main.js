@@ -1,158 +1,222 @@
-const container = document.getElementById('Ecomerce');
-const img = document.querySelectorAll('img');
-const cartItem = document.querySelector('.cart-items');
-
-console.log('123', container);
-console.log('456', img);
-
-container.addEventListener('mousemove', (e) => {
-   // console.log('Jatin')
-    for (let i = 0; i < img.length; i++) {
-        //console.log('In the loop')
-        if (e.target == img[i]) { 
-           // console.log('789',img[i]);
-            let x = e.clientX - e.target.offsetLeft;
-            let y = e.clientY - e.target.offsetTop;
-            img[i].style.transformOrigin = `${x}px ${y}px`;
-            img[i].style.transform = 'scale(1.5)';
-        }
-        if (e.target != img[i]) {
-            img[i].style.transformOrigin = "center center";
-            img[i].style.transform = "scale(1)";
-        }
-
-    }
-});
+const cart_items = document.querySelector('#cart .cart-items');
 
 
-container.addEventListener('click', (e) => {
-    if (e.target.className=='shop-item-button'){
+const parentNode = document.getElementById('music-content');
+
+
+window.addEventListener('load', () => {
+    console.log('loaded');
+    const objUrlParams = new URLSearchParams(window.location.search);
+    const page = objUrlParams.get('page') || 1;
+    console.log('checking page',page);
+    axios.get(`http://localhost:3000/shop?page=${page}`).then((products) => {
+        console.log(products)
+        products.data.products.forEach(product => {
+            const productHtml = `
+                <div id="album-${product.id}">
+                    <h3>${product.title}</h3>
+                    <div class="image-container">
+                        <img class="prod-images" src=${product.image} alt="">
+                    </div>
+                                    <div class="prod-details">
+                        <span>$<span>${product.price}</span></span>
+                        <button class="shop-item-button" type='button'>ADD TO CART</button>
+                    </div>
+                </div>`
+            parentNode.innerHTML += productHtml
+
+        })
+        showPagination(products.data);
+    })
+
+})
+
+document.addEventListener('click', (e) => {
+
+    if (e.target.className == 'shop-item-button') {
         const prodId = Number(e.target.parentNode.parentNode.id.split('-')[1]);
-        axios.post('http://localhost:3000/cart', { productId: prodId}).then(data => {
-            if(data.data.error){
+        axios.post('http://localhost:3000/cart', { productId: prodId }).then(data => {
+            if (data.data.error) {
                 throw new Error('Unable to add product');
             }
             showNotification(data.data.message, false);
         })
-        .catch(err => {
-            console.log(err);
-            showNotification(err, true);
-        });
+            .catch(err => {
+                console.log(err);
+                showNotification(err, true);
+            });
 
     }
-    if (e.target.className == 'cart-button' || e.target.className == 'cart-holder') {
-        console.log('123', e.target.classList);
-        axios.get('http://localhost:3000/cart').then(products => {
-            console.log('8015', products.data);
-            cartItem.innerHTML="";
-            document.querySelector('.cart-number').innerText=0;
-            for (let i = 0; i < products.data.length; i++) {
-                showProductInCart(products.data[i]);
+    if (e.target.className == 'cart-btn-bottom' || e.target.className == 'cart-bottom' || e.target.className == 'cart-holder') {
+        axios.get('http://localhost:3000/cart').then(carProducts => {
+            showProductsInCart(carProducts.data);
+            document.querySelector('#cart').style = "display:block;"
 
-            }
         })
-        document.querySelector('#cart').style = "display:block;"
     }
-    if (e.target.className == 'cancle') {
-        console.log('456', e.target.className);
+    if (e.target.className == 'cancel') {
         document.querySelector('#cart').style = "display:none;"
     }
-
-    if (e.target.className == 'purchase-button') {
+    if (e.target.className == 'purchase-btn') {
         if (parseInt(document.querySelector('.cart-number').innerText) === 0) {
             alert('You have Nothing in Cart , Add some products to purchase !');
             return
         }
-        axios.post('http://localhost:3000/delete-cart')
+        axios.post('http://localhost:3000/post-order')
+        //.then(() => deleteCartItem(e,prodId))
+        .then((result)=>{
+            console.log(result);
+            showNotification( `Order sucessfully placed with ${result.data[0].orderId}`,false);
+        }).catch((err)=>{
+            console.log(err);
+            showNotification(err, true);
+        })
         alert('Thanks for the purchase')
-        cartItem.innerHTML = ""
+        cart_items.innerHTML = "";
         document.querySelector('.cart-number').innerText = 0
-        document.querySelector('#total-value').innerText = `0`;
+        document.querySelector('#total-value').innerText = 0;
     }
-   
 })
 
-window.addEventListener('DOMContentLoaded', () => {
-    axios.get('http://localhost:3000/shop').then((data) => {
-        console.log('123', data.data);
-        for (let i = 0; i < data.data.length; i++) {
-            showOnScreen(data.data[i]);
-        }
-    })
-})
+let total_cart_price = document.querySelector('#total-value').innerText;
 
-function showOnScreen(data) {
-    const parent = document.getElementById('music-content');
-
-    const child = `<div id="product-${data.id}">
-    <h3>${data.title}</h3>
-    <div class="image-container">
-        <img src="${data.image}" alt="">
-    </div>
-    <div class="prod-details">
-        <span> $
-            <span>${data.price}</span>
+function showProductsInCart(listofproducts) {
+    cart_items.innerHTML = "";
+    document.querySelector('.cart-number').innerText = 0;
+    listofproducts.forEach(product => {
+        const id = `album-${product.id}`;
+        const name = product.title;
+        const img_src = product.image;
+        const price = product.price;
+        document.querySelector('.cart-number').innerText = parseInt(document.querySelector('.cart-number').innerText) + 1;
+        total_cart_price = parseFloat(total_cart_price) + parseFloat(price)
+        total_cart_price = total_cart_price.toFixed(2)
+        document.querySelector('#total-value').innerText = `${total_cart_price}`;
+        const cart_item = document.createElement('div');
+        cart_item.classList.add('cart-row');
+        cart_item.setAttribute('id', `in-cart-${id}`);
+        cart_item.innerHTML = `
+        <span class='cart-item cart-column'>
+        <img class='cart-img' src="${img_src}" alt="">
+            <span>${name}</span>
         </span>
-        <button class="shop-item-button" type="button">ADD TO CART</button>
-
-    </div>
-
-</div>`;
-    console.log('456', child)
-
-    parent.innerHTML += child;
-
+        <span class='cart-price cart-column'>${price}</span>
+        <form onsubmit='deleteCartItem(event, ${product.id},${price})' class='cart-quantity cart-column'>
+            <input type="text" value="1">
+            <button>REMOVE</button>
+        </form>`
+        cart_items.appendChild(cart_item)
+    })
 }
-
-function showProductInCart(product) {
-
-
-    let total_cart_price = document.querySelector('#total-value').innerText;
-
-
-    document.querySelector('.cart-number').innerText = parseInt(document.querySelector('.cart-number').innerText) + 1
-    total_cart_price = parseFloat(total_cart_price) + parseFloat(product.price)
+function deleteCartItem(e, prodId,price) {
+    e.preventDefault();
+    total_cart_price = parseFloat(total_cart_price) - parseFloat(price)
     total_cart_price = total_cart_price.toFixed(2)
     document.querySelector('#total-value').innerText = `${total_cart_price}`;
-    const item = document.createElement('div');
-    item.setAttribute('id', `in-cart-${product.id}`);
-    item.innerHTML = `  <span class='cart-item cart-column'>
-    <img class='cart-img' src="${product.image}" alt="">
-        <span>${product.title}</span>
-    </span>
-    <span class='cart-price cart-column'>${product.price}</span>
-    <form onsubmit='deleteCartItem(event, ${product.id})' class='cart-quantity cart-column'>
-        <input type="text" value="1">
-        <button>REMOVE</button>
-    </form>`;
-    cartItem.appendChild(item);
-
-}
-
-
-function deleteCartItem(e, prodId){
-    e.preventDefault();
-    console.log(prodId);
-    axios.post('http://localhost:3000/cart/delete-item', {productId: prodId})
+    axios.post('http://localhost:3000/cart/delete-item', { productId: prodId })
         .then(() => removeElementFromCartDom(prodId))
 }
 
 
+function orderItem(e, prodId) {
+    e.preventDefault();
+    console.log(prodId);
+    axios.post('http://localhost:3000/post-order', { productId: prodId })
 
-function removeElementFromCartDom(prodId){
-    document.getElementById(`in-cart-${prodId}`).remove();
-    showNotification('Succesfuly removed product')
+        .then((result)=>{
+            console.log('456',result.data);
+            showNotification(` Order sucessfully placed with ${result.data[0].orderId}`,false);
+            deleteCartItem(e,prodId);
+        }).catch((err)=>{
+            console.log(err);
+            showNotification(err, true);
+        })
 }
 
-
-function showNotification(message, iserror){
+function showNotification(message, iserror) {
     const container = document.getElementById('container');
     const notification = document.createElement('div');
     notification.style.backgroundColor = iserror ? 'red' : 'green';
     notification.classList.add('notification');
     notification.innerHTML = `<h4>${message}<h4>`;
     container.appendChild(notification);
-    setTimeout(()=>{
+    setTimeout(() => {
         notification.remove();
-    },2500)
+    }, 2500)
+}
+
+function removeElementFromCartDom(prodId) {
+    document.getElementById(`in-cart-album-${prodId}`).remove();
+    showNotification('Succesfuly removed product')
+}
+
+
+
+const pagination = document.querySelector('.pagination');
+
+function showPagination({
+    currentPage,
+    hasNextPage,
+    nextPage,
+    hasPreviousPage,
+    previousPage,
+    lastPage
+}) {
+    pagination.innerHTML = "";
+
+    if (hasPreviousPage) {
+
+        const btn2 = document.createElement('button');
+        btn2.innerHTML = previousPage;
+        btn2.addEventListener('click', () => {
+            parentNode.innerHTML = "";
+            getProducts(previousPage)
+        });
+        pagination.appendChild(btn2);
+
+    }
+    const btn1 = document.createElement('button');
+    btn1.innerHTML = `<h3>${currentPage}</h3>`;
+    btn1.addEventListener('click', () => {
+        parentNode.innerHTML = "";
+
+        getProducts(currentPage)
+    });
+    pagination.appendChild(btn1);
+
+    if (hasNextPage) {
+
+        const btn3 = document.createElement('button');
+        btn3.innerHTML = nextPage;
+        btn3.addEventListener('click', () => {
+            parentNode.innerHTML = "";
+            getProducts(nextPage)
+        });
+        pagination.appendChild(btn3);
+    }
+}
+
+function getProducts(page) {
+    axios.get(`http://localhost:3000/shop?page=${page}`).then((products) => {
+        console.log(products)
+        products.data.products.forEach(product => {
+            const productHtml = `
+                <div id="album-${product.id}">
+                    <h3>${product.title}</h3>
+                    <div class="image-container">
+                        <img class="prod-images" src=${product.image} alt="">
+                    </div>
+                                    <div class="prod-details">
+                        <span>$<span>${product.price}</span></span>
+                        <button class="shop-item-button" type='button'>ADD TO CART</button>
+                    </div>
+                </div>`
+            parentNode.innerHTML += productHtml
+
+        })
+    })
+        .catch(err => {
+            console.log(err);
+            showNotification('Your BackEnd is not responding or start', true);
+        })
 }

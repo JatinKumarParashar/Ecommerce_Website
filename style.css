@@ -437,3 +437,13 @@ header ul a{
     border-radius:7px;
     padding:5px;
 }
+
+.pagination{
+    text-align: center;
+    margin-top: 10px;
+
+}
+
+.pagination button{
+    margin: 10px 10px;
+}
