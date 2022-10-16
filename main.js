@@ -6,6 +6,11 @@ const parentNode = document.getElementById('music-content');
 
 window.addEventListener('load', () => {
     console.log('loaded');
+    axios.get('http://localhost:3000/cart').then(carProducts => {
+        showProductsInCart(carProducts.data);
+       // document.querySelector('#cart').style = "display:block;"
+
+    })
     const objUrlParams = new URLSearchParams(window.location.search);
     const page = objUrlParams.get('page') || 1;
     console.log('checking page',page);
@@ -82,6 +87,8 @@ let total_cart_price = document.querySelector('#total-value').innerText;
 
 function showProductsInCart(listofproducts) {
     cart_items.innerHTML = "";
+    total_cart_price = 0;
+console.log('total value ',document.querySelector('#total-value').innerText);
     document.querySelector('.cart-number').innerText = 0;
     listofproducts.forEach(product => {
         const id = `album-${product.id}`;
@@ -104,29 +111,36 @@ function showProductsInCart(listofproducts) {
         <form onsubmit='deleteCartItem(event, ${product.id},${price})' class='cart-quantity cart-column'>
             <input type="text" value="1">
             <button>REMOVE</button>
-        </form>`
+        </form>
+        <form onsubmit='orderItem(event, ${product.id},${price})' class='cart-quantity cart-column'>
+       
+        <button>Order Now</button>
+    </form>`
         cart_items.appendChild(cart_item)
     })
 }
 function deleteCartItem(e, prodId,price) {
     e.preventDefault();
+    document.querySelector('.cart-number').innerText = parseInt(document.querySelector('.cart-number').innerText) - 1;
     total_cart_price = parseFloat(total_cart_price) - parseFloat(price)
+    console.log('checking total cart price 1',total_cart_price);
     total_cart_price = total_cart_price.toFixed(2)
+    console.log('checking total cart price',total_cart_price);
     document.querySelector('#total-value').innerText = `${total_cart_price}`;
     axios.post('http://localhost:3000/cart/delete-item', { productId: prodId })
         .then(() => removeElementFromCartDom(prodId))
 }
 
 
-function orderItem(e, prodId) {
+function orderItem(e, prodId,price) {
     e.preventDefault();
     console.log(prodId);
     axios.post('http://localhost:3000/post-order', { productId: prodId })
 
         .then((result)=>{
             console.log('456',result.data);
-            showNotification(` Order sucessfully placed with ${result.data[0].orderId}`,false);
-            deleteCartItem(e,prodId);
+            showNotification(` Order sucessfully placed with OrderId ${result.data[0].orderId}`,false);
+            deleteCartItem(e,prodId,price);
         }).catch((err)=>{
             console.log(err);
             showNotification(err, true);
